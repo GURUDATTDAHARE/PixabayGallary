@@ -17,16 +17,18 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.gurudattdahare.photos.Modal.Guru;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity  {
-     private ArrayList<String> list=new ArrayList<>();
-    String url ="https://pixabay.com/api/?key=18936531-6427c0baa69b1fd7701494011&q=yellow+flowers&image_type=photo";
+     private List<Guru> list;
+    String url ="https://pixabay.com/api/?key=18936531-6427c0baa69b1fd7701494011&q=yellow+flowers&image_type=photo"+"&per_page=50";
      private RecyclerView recyclerView;
      private RecyclerView.LayoutManager layoutManager;
      private RecyclerView.Adapter adapter;
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        list=new ArrayList<>();
         recyclerView=findViewById(R.id.recycler);
         recyclerView.setHasFixedSize(true);
         layoutManager=new LinearLayoutManager(this);
@@ -49,7 +52,7 @@ public class MainActivity extends AppCompatActivity  {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                String s="https://pixabay.com/api/?key=18936531-6427c0baa69b1fd7701494011&q="+query+"&image_type=photo";
+                String s="https://pixabay.com/api/?key=18936531-6427c0baa69b1fd7701494011&q="+query+"&image_type=photo"+"&per_page=50";
                 list.clear();
                 Json(s);
                 return false;
@@ -75,11 +78,14 @@ public class MainActivity extends AppCompatActivity  {
                     JSONArray array= response.getJSONArray("hits");
                     for(int i=0;i<array.length();i++)
                     {
-                        String s=array.getJSONObject(i).getString("webformatURL");
-                        list.add(s);
+                        Guru guru=new Guru();
+                        guru.setURL(array.getJSONObject(i).getString("webformatURL"));
+                         guru.setDownloads(array.getJSONObject(i).getInt("downloads"));
+                         guru.setLikes(array.getJSONObject(i).getInt("likes"));
+                        list.add(guru);
                         Log.d("guru1","responce "+array.getJSONObject(i));
                     }
-                    adapter=new Adapter(list,getApplicationContext());
+                    adapter=new Adapter((ArrayList<Guru>) list,getApplicationContext());
                     recyclerView.setAdapter(adapter);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -89,7 +95,10 @@ public class MainActivity extends AppCompatActivity  {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d("guru","error");
+             //   Log.d("guru","error");
+                Log.d("guru","error "+error);
+                adapter=new Adapter((ArrayList<Guru>) list,getApplicationContext());
+                recyclerView.setAdapter(adapter);
             }
         });
         queue.add(jsonObjectRequest);
